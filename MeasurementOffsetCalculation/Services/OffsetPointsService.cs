@@ -6,7 +6,7 @@ namespace MeasurementOffsetCalculation.Services
     {
         private readonly LinearFunctionCalculator linearFunctionCalculator;
         private List<ValueOffsetSetting> breakPoints = new List<ValueOffsetSetting>();
-        private List<(ValueOffsetSetting valueOffset, Func<float, float> equation)> calculatedEquations = new();
+        private List<CalculatedEquation> calculatedEquations = new();
 
         public OffsetPointsService(LinearFunctionCalculator linearFunctionCalculator)
         {
@@ -33,8 +33,8 @@ namespace MeasurementOffsetCalculation.Services
             if (calculatedEquations.Count == 0)
                 return xValue;
 
-            (ValueOffsetSetting valueOffset, Func<float, float> equation) = this.calculatedEquations.Where(w => w.valueOffset.Value < xValue).OrderBy(f => f.valueOffset.Value).ToArray()[^1];
-            return equation(xValue);
+            CalculatedEquation calculatedEquation = this.calculatedEquations.Where(w => w.valueOffset.Value < xValue).OrderByDescending(f => f.valueOffset.Value).FirstOrDefault() ?? this.calculatedEquations.First();
+            return calculatedEquation.equation(xValue);
         }
 
         private void CalculateEquationFunctions()
@@ -46,8 +46,10 @@ namespace MeasurementOffsetCalculation.Services
                 float deltaForLowerPoint = lowerPoint.ReferenceValue - lowerPoint.Value;
                 float deltaForHigherPoint = higherPoint.ReferenceValue - higherPoint.Value;
                 (string equationString, Func<float, float> equationFunction) = this.linearFunctionCalculator.GetLinearFunctionEquation(new(lowerPoint.Value, deltaForLowerPoint), new(higherPoint.Value, deltaForHigherPoint));
-                this.calculatedEquations.Add((lowerPoint, equationFunction));
+                this.calculatedEquations.Add(new (lowerPoint, equationFunction));
             }
         }
     }
+
+    internal record CalculatedEquation(ValueOffsetSetting valueOffset, Func<float, float> equation);
 }

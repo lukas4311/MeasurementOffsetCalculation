@@ -31,15 +31,6 @@ Console.WriteLine("\nCalculate offsets:");
 
 OffsetPointsService offsetPointsService = new OffsetPointsService(new LinearFunctionCalculator());
 offsetPointsService.SetBreakPoints(breakPointsOffsets);
-//WriteAndCalculate(6.0f);
-//WriteAndCalculate(6.4f);
-//WriteAndCalculate(7.0f);
-//WriteAndCalculate(8.7f);
-//WriteAndCalculate(9.1f);
-//WriteAndCalculate(10.0f);
-//WriteAndCalculate(11.0f);
-//WriteAndCalculate(12.0f);
-
 Console.WriteLine("Give me x value (float) to calculate offset: (Press Q for stop calculating)");
 
 do
@@ -49,8 +40,9 @@ do
     if (value.ToUpper() == "Q")
         break;
 
-    float castedValue = float.Parse(value);
-    WriteAndCalculate(castedValue);
+    if (float.TryParse(value, out float parsedValue))
+        WriteAndCalculate(parsedValue);
+
 } while (true);
 
 Console.WriteLine("\nI am done with YOU");
