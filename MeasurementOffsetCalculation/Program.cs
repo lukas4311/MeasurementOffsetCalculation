@@ -1,57 +1,78 @@
-﻿using MeasurementOffsetCalculation.Services;
+﻿using BenchmarkDotNet.Running;
+using MeasurementOffsetCalculation.Services;
 
 Console.WriteLine("Hello i am measurement offset calculator.");
 Console.WriteLine("Give me break points (order them from lower to higher) with reference values: (Press Q for stop adding breakpoints)");
 
-List<ValueOffsetSetting> breakPointsOffsets = new List<ValueOffsetSetting>();
+Console.WriteLine("""
+    Select mode:
+        1.Your values
+        2.Benchmark
+    """);
 
-do
+string mod = Console.ReadLine();
+
+if (mod == "1")
 {
-    string value = Console.ReadLine();
+    List<ValueOffsetSetting> breakPointsOffsets = new List<ValueOffsetSetting>();
 
-    if (value.ToUpper() == "Q")
-        break;
+    do
+    {
+        string value = Console.ReadLine();
 
-    int castedValue = int.Parse(value);
-    int referenceValue = int.Parse(Console.ReadLine());
+        if (value.ToUpper() == "Q")
+            break;
 
-    ValueOffsetSetting valueOffsetSetting = new(castedValue, referenceValue);
-    breakPointsOffsets.Add(valueOffsetSetting);
-} while (true);
+        int castedValue = int.Parse(value);
+        int referenceValue = int.Parse(Console.ReadLine());
 
-Console.WriteLine("\n\nI am calculating linear equations for breakpoints\n");
+        ValueOffsetSetting valueOffsetSetting = new(castedValue, referenceValue);
+        breakPointsOffsets.Add(valueOffsetSetting);
+    } while (true);
 
-Console.WriteLine("Breakpoints:");
+    Console.WriteLine("\n\nI am calculating linear equations for breakpoints\n");
 
-foreach (var item in breakPointsOffsets)
-    Console.WriteLine(item);
+    Console.WriteLine("Breakpoints:");
 
-
-Console.WriteLine("\nCalculate offsets:");
-
-OffsetPointsService offsetPointsService = new OffsetPointsService(new LinearFunctionCalculator());
-offsetPointsService.SetBreakPoints(breakPointsOffsets);
-Console.WriteLine("Give me x value (float) to calculate offset: (Press Q for stop calculating)");
-
-do
-{
-    string value = Console.ReadLine();
-
-    if (value.ToUpper() == "Q")
-        break;
-
-    if (float.TryParse(value, out float parsedValue))
-        WriteAndCalculate(parsedValue);
-
-} while (true);
-
-Console.WriteLine("\nI am done with YOU");
-Console.ReadKey();
+    foreach (var item in breakPointsOffsets)
+        Console.WriteLine(item);
 
 
-void WriteAndCalculate(float xValue)
-{
-    Console.WriteLine($"Value {xValue} offset {offsetPointsService.CalculateValue(xValue)}");
+    Console.WriteLine("\nCalculate offsets:");
+
+    OffsetPointsService offsetPointsService = new OffsetPointsService(new LinearFunctionCalculator());
+    offsetPointsService.SetBreakPoints(breakPointsOffsets);
+    Console.WriteLine("Give me x value (float) to calculate offset: (Press Q for stop calculating)");
+
+    do
+    {
+        string value = Console.ReadLine();
+
+        if (value.ToUpper() == "Q")
+            break;
+
+        if (float.TryParse(value, out float parsedValue))
+            WriteAndCalculate(parsedValue);
+
+    } while (true);
+
+    Console.WriteLine("\nI am done with YOU");
+
+    void WriteAndCalculate(float xValue)
+    {
+        Console.WriteLine($"Value {xValue} offset {offsetPointsService.CalculateValueExperimental(xValue)}");
+    }
 }
+else if (mod == "2")
+{
+    //BenchmarkTest benchmarkTest = new BenchmarkTest();
+    //benchmarkTest.Test1();
+    //benchmarkTest.Test2();
+    var summary = BenchmarkRunner.Run<BenchmarkTest>();
+}
+
+
+Console.WriteLine("Press anything to exit");
+Console.ReadKey();
 
 internal record ValueOffsetSetting(float Value, float ReferenceValue);
