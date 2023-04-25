@@ -7,6 +7,7 @@ namespace MeasurementOffsetCalculation.Services
         private readonly LinearFunctionCalculator linearFunctionCalculator;
         private List<ValueOffsetSetting> breakPoints = new List<ValueOffsetSetting>();
         private List<CalculatedEquation> calculatedEquations = new();
+        private List<CalculatedEquationFilter> calculatedEquations2 = new();
 
         public OffsetPointsService(LinearFunctionCalculator linearFunctionCalculator)
         {
@@ -37,8 +38,24 @@ namespace MeasurementOffsetCalculation.Services
             return calculatedEquation.equation(xValue);
         }
 
+        public float CalculateValueExperimental(float xValue)
+        {
+            if (calculatedEquations.Count == 0)
+                return xValue;
+
+            CalculatedEquationFilter calculatedEquation = this.calculatedEquations2.FirstOrDefault(x => x.shouldDo(xValue));
+            return calculatedEquation.equation(xValue);
+        }
+
         private void CalculateEquationFunctions()
         {
+            if(this.breakPoints.Count() == 0)
+            {
+                Console.WriteLine("No breakpoint provided");
+                return;
+            }
+                
+
             for (int i = 0; i < this.breakPoints.Count() - 1; i++)
             {
                 ValueOffsetSetting lowerPoint = this.breakPoints[i];
@@ -47,9 +64,13 @@ namespace MeasurementOffsetCalculation.Services
                 float deltaForHigherPoint = higherPoint.ReferenceValue - higherPoint.Value;
                 (string equationString, Func<float, float> equationFunction) = this.linearFunctionCalculator.GetLinearFunctionEquation(new(lowerPoint.Value, deltaForLowerPoint), new(higherPoint.Value, deltaForHigherPoint));
                 this.calculatedEquations.Add(new (lowerPoint, equationFunction));
+                this.calculatedEquations2.Add(new(x => x > lowerPoint.Value && x < higherPoint.Value, equationFunction));
             }
+
+            this.calculatedEquations2.Add(new(_ => true, this.calculatedEquations2.First().equation));
         }
     }
 
     internal record CalculatedEquation(ValueOffsetSetting valueOffset, Func<float, float> equation);
+    internal record CalculatedEquationFilter(Func<float, bool> shouldDo, Func<float, float> equation);
 }
